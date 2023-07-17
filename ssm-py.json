@@ -1,0 +1,29 @@
+import boto3
+from datetime import datetime, timedelta
+
+# Initialize the Boto3 client
+ec2_client = boto3.client('ec2')
+
+# Retrieve the current date
+current_date = datetime.now()
+
+# Define the retention period in days
+retention_period = 30
+
+# Retrieve the list of EBS volumes in an available state
+response = ec2_client.describe_volumes(Filters=[{'Name': 'status', 'Values': ['available']}])
+
+# Iterate over the volumes and check their creation date
+for volume in response['Volumes']:
+    volume_id = volume['VolumeId']
+    creation_date = volume['CreateTime']
+    delta = current_date - creation_date.replace(tzinfo=None)
+    
+    # Check if the volume is older than the retention period
+    if delta.days > retention_period:
+        print(f"Volume {volume_id} is older than {retention_period} days. Tagging as orphan.")
+        
+        # Tag the volume as orphan
+        ec2_client.create_tags(Resources=[volume_id], Tags=[{'Key': 'Orphan', 'Value': 'true'}])
+    else:
+        print(f"Volume {volume_id} is within the retention period.")
