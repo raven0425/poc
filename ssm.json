@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "0.3",
+  "description": "Automation document to list EBS volumes in an available state and tag them with a retention period of 90 days.",
+  "assumeRole": "{{ AutomationAssumeRole }}",
+  "parameters": {
+    "RetentionPeriod": {
+      "type": "String",
+      "description": "Retention period in days",
+      "default": "90"
+    }
+  },
+  "mainSteps": [
+    {
+      "name": "ListVolumes",
+      "action": "aws:runShellScript",
+      "inputs": {
+        "runCommand": [
+          "aws ec2 describe-volumes --filters Name=status,Values=available --query 'Volumes[*].VolumeId' --output text"
+        ]
+      }
+    },
+    {
+      "name": "TagVolumes",
+      "action": "aws:runShellScript",
+      "inputs": {
+        "runCommand": [
+          "while IFS= read -r volume_id; do aws ec2 create-tags --resources $volume_id --tags Key=RetentionPeriod,Value=$RetentionPeriod; done"
+        ]
+      }
+    }
+  ]
+}
