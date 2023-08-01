@@ -1,0 +1,24 @@
+resource "aws_ssm_document" "example" {
+  name          = "MyPythonAutomationDocument"
+  document_type = "Automation"
+
+  # The content of the Automation Document
+  document_content = <<EOF
+{
+  "schemaVersion": "2.2",
+  "description": "My Automation Document with a Python script",
+  "mainSteps": [
+    {
+      "action": "aws:runShellScript",
+      "name": "ExecutePythonScript",
+      "inputs": {
+        "runCommand": [
+          "python3",
+          "print('Hello, this is my Python script!')"
+        ]
+      }
+    }
+  ]
+}
+EOF
+}
